@@ -2257,3 +2257,15 @@ En faisant **ctrl + shift + p** la barre de recherche s'est déroulée j'ai cher
 
 ```
 NKENTSEU a 1 342 559 lignes 
+
+
+
+##COMPARAISON 
+
+-NOMBRE DE FICHIERS:
+on a une difference de 2 241 fichiers.
+
+
+
+-NOMBRE DE LIGNES:
+on a une difference de 149 lignes.
