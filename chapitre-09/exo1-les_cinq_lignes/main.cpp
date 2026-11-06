@@ -1,13 +1,13 @@
-
-#include <iostream>
+ #include <iostream>
 #include <string>
 #include <array>
 #include <algorithm>
+#include <cctype>
 
 using namespace std;
 
-int main() {
-
+int main()
+{
     string C;
     getline(cin, C);
 
@@ -25,22 +25,28 @@ int main() {
 
     string ligne;
 
-    while (getline(cin, ligne)) {
-
+    while (getline(cin, ligne))
+    {
         // Supprimer les commentaires
         size_t commentaire = ligne.find("//");
 
-        if (commentaire != string::npos) {
+        if (commentaire != string::npos)
+        {
             ligne = ligne.substr(0, commentaire);
         }
 
-        // Supprimer les espaces
+        // Supprimer tous les espaces
         ligne.erase(
-            remove(ligne.begin(), ligne.end(), ' '),
+            remove_if(ligne.begin(), ligne.end(),
+                [](unsigned char caractere)
+                {
+                    return isspace(caractere);
+                }),
             ligne.end()
         );
 
-        if (ligne.empty()) {
+        if (ligne.empty())
+        {
             continue;
         }
 
@@ -48,16 +54,19 @@ int main() {
         string etat = "ECRIT";
 
         if (ligne.size() >= 8 &&
-            ligne.substr(ligne.size() - 8) == "=delete;") {
+            ligne.substr(ligne.size() - 8) == "=delete;")
+        {
             etat = "SUPPRIME";
         }
         else if (ligne.size() >= 9 &&
-                 ligne.substr(ligne.size() - 9) == "=default;") {
+                 ligne.substr(ligne.size() - 9) == "=default;")
+        {
             etat = "DEFAUT";
         }
 
         // Reconnaître le destructeur
-        if (ligne.find("~" + C + "(") != string::npos) {
+        if (ligne.find("~" + C + "(") != string::npos)
+        {
             etats[0] = etat;
         }
 
@@ -66,7 +75,8 @@ int main() {
 
         if (ligne.rfind(copie, 0) == 0 &&
             (ligne.size() == copie.size() ||
-             ligne[copie.size()] != '&')) {
+             ligne[copie.size()] != '&'))
+        {
             etats[1] = etat;
         }
 
@@ -76,14 +86,16 @@ int main() {
 
         if (ligne.rfind(affectationCopie, 0) == 0 &&
             (ligne.size() == affectationCopie.size() ||
-             ligne[affectationCopie.size()] != '&')) {
+             ligne[affectationCopie.size()] != '&'))
+        {
             etats[2] = etat;
         }
 
         // Reconnaître le constructeur de déplacement
         string deplacement = C + "(" + C + "&&";
 
-        if (ligne.rfind(deplacement, 0) == 0) {
+        if (ligne.rfind(deplacement, 0) == 0)
+        {
             etats[3] = etat;
         }
 
@@ -91,45 +103,70 @@ int main() {
         string affectationDeplacement =
             C + "&operator=(" + C + "&&";
 
-        if (ligne.rfind(affectationDeplacement, 0) == 0) {
+        if (ligne.rfind(affectationDeplacement, 0) == 0)
+        {
             etats[4] = etat;
         }
     }
 
     // Afficher les cinq états
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++)
+    {
         cout << noms[i] << " " << etats[i] << '\n';
     }
 
     // Déterminer la règle
     int nombre = 0;
 
-    for (int i = 0; i < 5; i++) {
-        if (etats[i] != "ABSENT") {
+    for (int i = 0; i < 5; i++)
+    {
+        if (etats[i] != "ABSENT")
+        {
             nombre++;
         }
     }
 
     string regle;
 
-    if (nombre == 0) {
+    if (nombre == 0)
+    {
         regle = "ZERO";
     }
-    else if (nombre == 5) {
+    else if (nombre == 5)
+    {
         regle = "CINQ";
     }
     else if (etats[0] != "ABSENT" &&
              etats[1] != "ABSENT" &&
              etats[2] != "ABSENT" &&
              etats[3] == "ABSENT" &&
-             etats[4] == "ABSENT") {
+             etats[4] == "ABSENT")
+    {
         regle = "TROIS";
     }
-    else {
+    else
+    {
         regle = "INCOMPLETE";
     }
 
     cout << "REGLE " << regle << '\n';
+
+    // Afficher les membres manquants
+    if (regle == "INCOMPLETE")
+    {
+        bool deplacementDeclare =
+            etats[3] != "ABSENT" || etats[4] != "ABSENT";
+
+        int limite = deplacementDeclare ? 5 : 3;
+
+        for (int i = 0; i < limite; i++)
+        {
+            if (etats[i] == "ABSENT")
+            {
+                cout << "MANQUE " << noms[i] << '\n';
+            }
+        }
+    }
 
     // Déterminer la possession
     cout << "POSSEDE "
@@ -142,21 +179,6 @@ int main() {
         (etats[3] == "ECRIT" || etats[3] == "DEFAUT");
 
     cout << "UNIQUE " << (unique ? "OUI" : "NON") << '\n';
-
-    // Afficher les membres manquants
-    if (regle == "INCOMPLETE") {
-
-        bool deplacementDeclare =
-            etats[3] != "ABSENT" || etats[4] != "ABSENT";
-
-        int limite = deplacementDeclare ? 5 : 3;
-
-        for (int i = 0; i < limite; i++) {
-            if (etats[i] == "ABSENT") {
-                cout << "MANQUE " << noms[i] << '\n';
-            }
-        }
-    }
 
     return 0;
 }
