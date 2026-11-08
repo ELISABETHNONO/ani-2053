@@ -1,0 +1,17 @@
+La promesse la plus forte :
+
+La promesse const est très importante, car elle garantit qu'une méthode ne modifiera pas l'objet sur lequel elle est appelée. Par exemple, PixelToWorld et GridSpacing sont déclarées const. Le compilateur vérifie cette promesse et interdit les modifications de l'objet dans ces méthodes.
+
+Le message du compilateur :
+
+test_const.cpp:17:5: error: 'this' argument to member function 'PanByPixels' has type 'const nkref::NkRefView', but function is not marked const
+   17 |     vue.PanByPixels(1.0f, 0.0f);
+      |     ^~~
+C:\Users\GSI\Desktop\Nkentseu\Applications\NkRef\src/NkRef/NkRefView.h:45:9: note: 'PanByPixels' declared here
+   45 |                         void PanByPixels(float32 dxPixels, float32 dyPixels) {
+      |                              ^
+1 error generated.
+
+Une promesse que la signature ne dit pas :
+
+La méthode HitTest parcourt les éléments du tableau en partant du dernier élément vers le premier. Elle retourne le premier élément qui correspond au point recherché. Ainsi, lorsqu'il y a plusieurs éléments superposés, elle privilégie celui qui se trouve en dernier dans le tableau. Ce comportement est visible dans le corps de la méthode, mais il n'est pas indiqué dans sa signature.

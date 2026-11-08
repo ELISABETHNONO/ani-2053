@@ -1,0 +1,20 @@
+1. Methode : PixelToWorld
+   Fichier : NkRefView.h
+   Nombre de promesses : 3
+    
+2. Methode : GridSpacing
+   Fichier : NkRefView.h
+   Nombre de promesses : 1
+    
+3. Methode : HalfSize
+   Fichier : NkRefBoard.h
+   Nombre de promesses : 2
+    
+4. Methode : WorldToLocal
+   Fichier : NkRefBoard.h
+   Nombre de promesses : 3
+    
+5. Methode : HitTest
+   Fichier : NkRefBoard.h
+   Nombre de promesses : 2
+    
