@@ -1,0 +1,9 @@
+
+NkRefView.h,   lignes : 86     
+NkRefBoard.h,  lignes : 371   
+NkRefFile.h,   lignes : 224  les includes: NkRefBoard.h NkRefView.h
+main.cpp,      lignes : 224  les includes: NkRefBoard.h NkRefView.h NkRefFile.h 
+
+le commit :  9c3fad332
+
+ 

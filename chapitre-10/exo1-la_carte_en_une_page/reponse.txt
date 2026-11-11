@@ -1,0 +1,12 @@
+    Ce que possède chaque fichier :
+NkRefView.h possède la gestion de la caméra. Il définit les conversions entre les coordonnées de l'écran et celles du monde, ainsi que la gestion du zoom et du déplacement de la vue.
+NkRefBoard.h possède le modèle de la planche. Il gère les éléments qui la composent, leur organisation et leur ordre, qui détermine leur profondeur.
+NkRefFile.h possède la gestion du format de fichier .nkref. Il permet de sauvegarder et de charger les planches grâce à un nombre magique et une version.
+main.cpp possède la logique principale de l'application. Il assure la liaison entre les différents composants et gère les interactions avec l'utilisateur.
+
+
+    La part des fichiers purs :
+Les fichiers purs sont NkRefView.h, NkRefBoard.h et NkRefFile.h. Ils représentent 681 lignes sur un total de 905 lignes, soit environ 75,25 % du code. Ces fichiers ne dépendent ni d'une fenêtre ni du rendu.
+
+    Les deux fichiers que je garderais :
+Je garderais NkRefView.h et NkRefBoard.h. La caméra est essentielle pour gérer les coordonnées, le zoom et les déplacements. Le modèle est indispensable, car il définit les éléments de la planche et leur organisation. Ces deux fichiers constituent les fondations de l'outil.
