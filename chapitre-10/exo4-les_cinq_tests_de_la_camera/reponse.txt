@@ -1,0 +1,8 @@
+Le signe que j'ai changé :
+J'ai remplacé le signe - par + dans le calcul de center.x dans la méthode ZoomAtPixel() de la copie de NkRefView.h.
+
+Le test qui est tombé :
+Le test point_fixe a échoué. L'erreur empêche de conserver le même point du monde sous le curseur pendant un zoom.
+
+Un test qui n'a rien vu :
+Le test aller_retour est resté OK, car il vérifie uniquement les conversions PixelToWorld() et WorldToPixel(). Il ne vérifie pas le comportement de ZoomAtPixel().
