@@ -1,7 +1,6 @@
-#include <iostream>
+ #include <iostream>
 #include <string>
 #include <vector>
-#include <sstream>
 #include <algorithm>
 #include <tuple>
 
@@ -11,35 +10,38 @@ struct Evenement {
     long long tour;
     int priorite;
     int ordre;
-    string resultat;
+    string texte;
+    bool possible;
 };
 
-vector<string> decouper(const string& texte, char separateur) {
-    vector<string> morceaux;
-    string morceau;
-    stringstream flux(texte);
+vector<string> decouper(const string& s, char sep) {
+    vector<string> resultat;
+    size_t debut = 0;
 
-    while (getline(flux, morceau, separateur)) {
-        morceaux.push_back(morceau);
+    while (true) {
+        size_t fin = s.find(sep, debut);
+
+        if (fin == string::npos) {
+            resultat.push_back(s.substr(debut));
+            break;
+        }
+
+        resultat.push_back(s.substr(debut, fin - debut));
+        debut = fin + 1;
     }
 
-    if (!texte.empty() && texte.back() == separateur) {
-        morceaux.push_back("");
-    }
-
-    return morceaux;
+    return resultat;
 }
 
-bool lireNombre(const string& texte, long long& nombre) {
-    if (texte.empty()) {
+bool lireNombre(const string& s, long long& n) {
+    if (s.empty()) {
         return false;
     }
 
     try {
-        size_t position;
-        nombre = stoll(texte, &position);
-
-        return position == texte.size();
+        size_t pos;
+        n = stoll(s, &pos);
+        return pos == s.size();
     }
     catch (...) {
         return false;
@@ -52,19 +54,23 @@ int main() {
     int ignores = 0;
     int ordre = 0;
 
-    long long sortie = 0;
-
     int captures = 0;
     int clics = 0;
     int depots = 0;
 
+    long long sortie = 0;
     string ligne;
 
-    while (getline(cin, ligne)) {
-        if (!ligne.empty() && ligne.back() == '\r') {
-            ligne.pop_back();
-        }
+    auto ajouter = [&](long long n, int priorite,
+                       const string& texte, bool capture = false) {
+        long long tour = capture ? n - 1 : n;
 
+        evenements.push_back({
+            tour, priorite, ordre++, texte, n > 0
+        });
+    };
+
+    while (getline(cin, ligne)) {
         size_t egal = ligne.find('=');
 
         if (egal == string::npos) {
@@ -75,14 +81,13 @@ int main() {
         string nom = ligne.substr(0, egal);
         string valeur = ligne.substr(egal + 1);
 
-        // CAPTURES
         if (nom == "NK_AGENT_SHOT") {
             vector<string> elements = decouper(valeur, ',');
 
-            for (const string& element : elements) {
+            for (const string& e : elements) {
                 long long n;
 
-                if (!lireNombre(element, n)) {
+                if (!lireNombre(e, n)) {
                     ignores++;
                     continue;
                 }
@@ -93,78 +98,48 @@ int main() {
                 }
 
                 captures++;
-
-                if (n > 0) {
-                    evenements.push_back({
-                        n - 1, 7, ordre++, "CAPTURE"
-                    });
-                }
+                ajouter(n, 7, "CAPTURE", true);
             }
         }
 
-        // SORTIE
         else if (nom == "NK_AGENT_EXIT") {
             if (!lireNombre(valeur, sortie)) {
                 ignores++;
             }
         }
 
-        // PAN
         else if (nom == "NK_AGENT_PAN") {
-            vector<string> champs = decouper(valeur, ':');
+            vector<string> c = decouper(valeur, ':');
+            long long n;
 
-            long long n, dx, dy;
-
-            if (champs.size() < 3 ||
-                !lireNombre(champs[0], n) ||
-                !lireNombre(champs[1], dx) ||
-                !lireNombre(champs[2], dy)) {
+            if (c.size() < 3 || !lireNombre(c[0], n)) {
                 ignores++;
                 continue;
             }
 
-            if (n > 0) {
-                evenements.push_back({
-                    n, 0, ordre++,
-                    "PAN " + to_string(dx) + " " + to_string(dy)
-                });
-            }
+            ajouter(n, 0, "PAN " + c[1] + " " + c[2]);
         }
 
-        // ZOOM
         else if (nom == "NK_AGENT_ZOOM") {
-            vector<string> champs = decouper(valeur, ':');
+            vector<string> c = decouper(valeur, ':');
+            long long n;
 
-            long long n, f, px, py;
-
-            if (champs.size() < 4 ||
-                !lireNombre(champs[0], n) ||
-                !lireNombre(champs[1], f) ||
-                !lireNombre(champs[2], px) ||
-                !lireNombre(champs[3], py)) {
+            if (c.size() < 4 || !lireNombre(c[0], n)) {
                 ignores++;
                 continue;
             }
 
-            if (n > 0) {
-                evenements.push_back({
-                    n, 1, ordre++,
-                    "ZOOM " + to_string(f) + " " +
-                    to_string(px) + " " + to_string(py)
-                });
-            }
+            ajouter(n, 1, "ZOOM " + c[1] + " " +
+                    c[2] + " " + c[3]);
         }
 
-        // DEPOTS
         else if (nom == "NK_AGENT_DROP") {
             vector<string> elements = decouper(valeur, ';');
 
-            for (const string& element : elements) {
-                size_t p1 = element.find(':');
-                size_t p2 = element.find(':', p1 == string::npos ? 0 : p1 + 1);
-                size_t p3 = element.find(':', p2 == string::npos ? 0 : p2 + 1);
-
-                long long n, px, py;
+            for (const string& e : elements) {
+                size_t p1 = e.find(':');
+                size_t p2 = e.find(':', p1 == string::npos ? 0 : p1 + 1);
+                size_t p3 = e.find(':', p2 == string::npos ? 0 : p2 + 1);
 
                 if (p1 == string::npos ||
                     p2 == string::npos ||
@@ -173,15 +148,14 @@ int main() {
                     continue;
                 }
 
-                string sn = element.substr(0, p1);
-                string sx = element.substr(p1 + 1, p2 - p1 - 1);
-                string sy = element.substr(p2 + 1, p3 - p2 - 1);
-                string chemin = element.substr(p3 + 1);
+                string sn = e.substr(0, p1);
+                string px = e.substr(p1 + 1, p2 - p1 - 1);
+                string py = e.substr(p2 + 1, p3 - p2 - 1);
+                string chemin = e.substr(p3 + 1);
 
-                if (!lireNombre(sn, n) ||
-                    !lireNombre(sx, px) ||
-                    !lireNombre(sy, py) ||
-                    chemin.empty()) {
+                long long n;
+
+                if (!lireNombre(sn, n)) {
                     ignores++;
                     continue;
                 }
@@ -193,29 +167,19 @@ int main() {
 
                 depots++;
 
-                if (n > 0) {
-                    evenements.push_back({
-                        n, 2, ordre++,
-                        "DEPOT " + chemin + " " +
-                        to_string(px) + " " + to_string(py)
-                    });
-                }
+                ajouter(n, 2, "DEPOT " + chemin + " " +
+                        px + " " + py);
             }
         }
 
-        // CLICS
         else if (nom == "NK_AGENT_CLICK") {
             vector<string> elements = decouper(valeur, ';');
 
-            for (const string& element : elements) {
-                vector<string> champs = decouper(element, ':');
+            for (const string& e : elements) {
+                vector<string> c = decouper(e, ':');
+                long long n;
 
-                long long n, px, py;
-
-                if (champs.size() < 3 ||
-                    !lireNombre(champs[0], n) ||
-                    !lireNombre(champs[1], px) ||
-                    !lireNombre(champs[2], py)) {
+                if (c.size() < 3 || !lireNombre(c[0], n)) {
                     ignores++;
                     continue;
                 }
@@ -227,38 +191,22 @@ int main() {
 
                 clics++;
 
-                if (n > 0) {
-                    evenements.push_back({
-                        n, 3, ordre++,
-                        "CLIC " + to_string(px) + " " + to_string(py)
-                    });
-                }
+                ajouter(n, 3, "CLIC " + c[1] + " " + c[2]);
             }
         }
 
-        // DEPLACEMENT
         else if (nom == "NK_AGENT_MOVE") {
-            vector<string> champs = decouper(valeur, ':');
+            vector<string> c = decouper(valeur, ':');
+            long long n;
 
-            long long n, dx, dy;
-
-            if (champs.size() < 3 ||
-                !lireNombre(champs[0], n) ||
-                !lireNombre(champs[1], dx) ||
-                !lireNombre(champs[2], dy)) {
+            if (c.size() < 3 || !lireNombre(c[0], n)) {
                 ignores++;
                 continue;
             }
 
-            if (n > 0) {
-                evenements.push_back({
-                    n, 4, ordre++,
-                    "MOVE " + to_string(dx) + " " + to_string(dy)
-                });
-            }
+            ajouter(n, 4, "MOVE " + c[1] + " " + c[2]);
         }
 
-        // RANGEMENT
         else if (nom == "NK_AGENT_PACK") {
             long long n;
 
@@ -267,40 +215,26 @@ int main() {
                 continue;
             }
 
-            if (n > 0) {
-                evenements.push_back({
-                    n, 5, ordre++, "RANGE"
-                });
-            }
+            ajouter(n, 5, "RANGE");
         }
 
-        // GRILLE
         else if (nom == "NK_AGENT_GRID") {
-            vector<string> champs = decouper(valeur, ':');
-
+            vector<string> c = decouper(valeur, ':');
             long long n;
 
-            if (champs.size() < 2 ||
-                !lireNombre(champs[0], n)) {
+            if (c.size() < 2 || !lireNombre(c[0], n)) {
                 ignores++;
                 continue;
             }
 
-            if (n > 0) {
-                evenements.push_back({
-                    n, 6, ordre++,
-                    "GRILLE " + champs[1]
-                });
-            }
+            ajouter(n, 6, "GRILLE " + c[1]);
         }
 
-        // NOM INCONNU
         else {
             ignores++;
         }
     }
 
-    // Classement chronologique des événements
     sort(evenements.begin(), evenements.end(),
         [](const Evenement& a, const Evenement& b) {
             return tie(a.tour, a.priorite, a.ordre) <
@@ -310,22 +244,23 @@ int main() {
 
     int jamais = 0;
 
-    // Affichage des événements exécutés
-    for (const Evenement& evenement : evenements) {
-        bool execute = (sortie <= 0 || evenement.tour < sortie);
+    for (const Evenement& e : evenements) {
+        bool execute = e.possible &&
+                       (sortie <= 0 || e.tour < sortie);
 
         if (execute) {
-            cout << "TOUR " << evenement.tour
-                 << " " << evenement.resultat << "\n";
-        } else {
+            cout << "TOUR " << e.tour << " "
+                 << e.texte << "\n";
+        }
+        else {
             jamais++;
         }
     }
 
-    // Affichage final
     if (sortie > 0) {
         cout << "ARRET " << sortie - 1 << "\n";
-    } else {
+    }
+    else {
         cout << "SANS_ARRET\n";
     }
 
